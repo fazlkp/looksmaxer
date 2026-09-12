@@ -1,0 +1,235 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Variables ─── */
+:root {
+  --cyan: rgba(0, 136, 169, 1);
+  --cyan-glow: rgba(0, 136, 169, 0.6);
+  --dark: #24252a;
+  --darker: #1a1b1f;
+}
+
+/* ─── Base Reset ─── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #24252a;
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar Styling ─── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #1a1b1f;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 136, 169, 0.8);
+  border-radius: 3px;
+}
+
+/* ─── Animated Gradient Background ─── */
+.animated-bg {
+  background: linear-gradient(45deg, #000000, #02070e, #25242a, #2a2828);
+  background-size: 300% 300%;
+  animation: gradientShift 12s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ─── Video Hero Section ─── */
+.video-section {
+  position: relative;
+  overflow: hidden;
+}
+.video-section video {
+  position: absolute;
+  z-index: -1;
+  min-width: 100%;
+  min-height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+/* ─── Glow Shadows ─── */
+.shadow-cyan {
+  box-shadow: -2px -1px 10px rgba(0, 136, 169, 1);
+}
+.shadow-cyan-hover:hover {
+  box-shadow: -2px -1px 20px rgba(0, 136, 169, 1);
+}
+.shadow-green-glow {
+  box-shadow: -2px -1px 10px rgb(194, 223, 6);
+}
+
+/* ─── Smooth Transitions ─── */
+a, button {
+  transition: all 0.3s ease;
+}
+
+/* ─── Toast Notifications ─── */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  animation: slideInRight 0.4s ease, fadeOut 0.4s ease 3.6s forwards;
+}
+@keyframes slideInRight {
+  from { transform: translateX(100px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(100px); }
+}
+
+/* ─── Page Transitions ─── */
+.page-enter {
+  animation: pageFadeIn 0.5s ease forwards;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Intersection Observer Animations ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Nav Active State ─── */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--cyan);
+  transition: width 0.3s ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
+
+/* ─── Input Focus Styles ─── */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 136, 169, 0.5);
+}
+
+/* ─── Card Hover ─── */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: -2px -1px 20px rgba(0, 136, 169, 1);
+}
+
+/* ─── Custom Cursor ─── */
+.custom-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='6' fill='rgba(0,136,169,0.8)'/%3E%3C/svg%3E") 12 12, pointer;
+}
+
+/* ─── Mobile Menu ─── */
+.mobile-menu {
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+.mobile-menu.open {
+  max-height: 300px;
+  opacity: 1;
+}
+
+/* ─── Loader ─── */
+.loader-spinner {
+  border: 3px solid rgba(0, 136, 169, 0.2);
+  border-top: 3px solid rgba(0, 136, 169, 1);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+/* ── Shared design system (glass / glow) ── */
+.glass-panel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,136,169,0.25);
+  backdrop-filter: blur(8px);
+  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.glass-panel:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,200,220,0.6);
+  box-shadow: 0 8px 28px rgba(0,136,169,0.25);
+}
+
+.gradient-title {
+  background: linear-gradient(90deg, #ffffff, #7fe8f2, #ffffff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shineText 5s linear infinite;
+}
+@keyframes shineText { to { background-position: 200% center; } }
+
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+.btn-shine:hover::before { left: 130%; }
+
+.badge-pulse { animation: badgeGlow 3s ease-in-out infinite; }
+@keyframes badgeGlow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }
+
+.page-hero-bg {
+  background: linear-gradient(-45deg, #050506, #0a2530, #00889a2e, #0a0a0a, #063d47, #05161a);
+  background-size: 400% 400%;
+  animation: gradientShift 16s ease infinite;
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
