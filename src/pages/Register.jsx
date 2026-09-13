@@ -2,7 +2,10 @@
 import { useNavigate, Link } from "react-router-dom";
 import FormInput, { PasswordStrengthBar } from "../components/FormInput";
 import { useForm, usePageTitle } from "../hooks";
-import { validators, auth, toast, analytics } from "../utils";
+import { validators, toast, analytics } from "../utils";
+import { auth, db } from "../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const validate = (values) => {
   const errors = {};
@@ -26,19 +29,52 @@ export default function Register() {
 
   const pwStrength = validators.password(values.password).strength;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!runValidate()) return;
 
     setIsSubmitting(true);
-    // Simulate async registration
-    setTimeout(() => {
-      auth.login({ username: values.username, email: values.email });
+    const usernameKey = values.username.trim().toLowerCase();
+
+    try {
+      // Make sure this username isn't already taken
+      const usernameDoc = await getDoc(doc(db, "usernames", usernameKey));
+      if (usernameDoc.exists()) {
+        toast.error("That username is already taken — try another.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create the real Firebase Auth account
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const uid = userCredential.user.uid;
+
+      // Store the profile, and a username→email lookup for login-by-username
+      await setDoc(doc(db, "users", uid), {
+        username: values.username,
+        email: values.email,
+        createdAt: new Date().toISOString(),
+      });
+      await setDoc(doc(db, "usernames", usernameKey), {
+        email: values.email,
+        uid,
+      });
+
       analytics.track("user_registered", { username: values.username });
       toast.success("Account created! Welcome to LooksMaxer 🎉");
-      navigate("/login");
+      navigate("/");
+    } catch (err) {
+      if (err.code === "auth/email-already-in-use") {
+        toast.error("An account with this email already exists.");
+      } else if (err.code === "auth/weak-password") {
+        toast.error("Password is too weak — try a stronger one.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+      console.error(err);
+    } finally {
       setIsSubmitting(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -49,7 +85,6 @@ export default function Register() {
           "linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)), url(https://wallpapercat.com/w/full/5/5/a/40645-3840x2160-desktop-4k-zayn-malik-wallpaper-photo.jpg) center/cover",
       }}
     >
-      {/* Spacer for fixed navbar */}
       <div className="h-[56px]" />
 
       <div className="flex flex-1 items-center justify-center py-10 px-4">
@@ -116,7 +151,6 @@ export default function Register() {
               </>
             )}
 
-            {/* Terms */}
             <label className="flex items-center gap-3 cursor-pointer mb-5">
               <input
                 type="checkbox"
@@ -136,7 +170,6 @@ export default function Register() {
               <p className="text-red-400 text-xs mb-3 font-[Verdana]">{errors.terms}</p>
             )}
 
-            {/* Submit */}
             <input
               type="submit"
               value={isSubmitting ? "Creating Account..." : "Proceed →"}

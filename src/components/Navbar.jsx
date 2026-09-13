@@ -1,7 +1,8 @@
 // ─── components/Navbar.jsx ───────────────────────────────────
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useScrollY } from "../hooks";
+import { useAuth } from "../context/AuthContext";
 import AnimatedLogo from "./AnimatedLogo";
 
 const NAV_LINKS = [
@@ -21,16 +22,20 @@ const AI_TOOLS = [
 export default function Navbar() {
   const scrollY = useScrollY();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const closeTimer = useRef(null);
+  const profileCloseTimer = useRef(null);
   const isScrolled = scrollY > 60;
 
-  // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
     setMobileToolsOpen(false);
+    setProfileOpen(false);
   }, [location]);
 
   const scrollToPremium = (e) => {
@@ -47,7 +52,20 @@ export default function Navbar() {
     closeTimer.current = setTimeout(() => setToolsOpen(false), 150);
   };
 
+  const openProfile = () => {
+    clearTimeout(profileCloseTimer.current);
+    setProfileOpen(true);
+  };
+  const closeProfileDelayed = () => {
+    profileCloseTimer.current = setTimeout(() => setProfileOpen(false), 200);
+  };
+
   const isAiToolActive = AI_TOOLS.some((t) => t.to === location.pathname);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <header
@@ -69,8 +87,10 @@ export default function Navbar() {
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .navdrop-item:hover {
-          background: rgba(0,136,169,0.12);
+        .navdrop-item:hover { background: rgba(0,136,169,0.12); }
+
+        .avatar-badge {
+          background: linear-gradient(135deg, rgba(0,136,169,1), rgba(0,200,220,1));
         }
       `}</style>
 
@@ -108,26 +128,14 @@ export default function Navbar() {
             ))}
 
             {/* AI Tools dropdown */}
-            <li
-              className="relative"
-              onMouseEnter={openTools}
-              onMouseLeave={closeToolsDelayed}
-            >
+            <li className="relative" onMouseEnter={openTools} onMouseLeave={closeToolsDelayed}>
               <button
                 className={`nav-link flex items-center gap-1 font-montserrat font-bold text-[13.5px] transition-colors duration-300 bg-transparent border-none cursor-pointer ${
                   isAiToolActive ? "text-[rgba(0,136,169,1)]" : "text-[azure] hover:text-[rgba(0,136,169,1)]"
                 }`}
               >
                 AI Tools
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  className={`transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}
-                >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform duration-200 ${toolsOpen ? "rotate-180" : ""}`}>
                   <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
@@ -135,11 +143,7 @@ export default function Navbar() {
               {toolsOpen && (
                 <div className="navdrop absolute top-full right-0 mt-3 w-56 rounded-xl overflow-hidden py-2">
                   {AI_TOOLS.map((tool) => (
-                    <Link
-                      key={tool.to}
-                      to={tool.to}
-                      className="navdrop-item flex items-center gap-3 px-4 py-2.5 text-[13px] font-[Verdana] text-[azure]/85 no-underline transition-colors"
-                    >
+                    <Link key={tool.to} to={tool.to} className="navdrop-item flex items-center gap-3 px-4 py-2.5 text-[13px] font-[Verdana] text-[azure]/85 no-underline transition-colors">
                       <span className="text-base">{tool.icon}</span>
                       {tool.label}
                     </Link>
@@ -150,12 +154,54 @@ export default function Navbar() {
           </ul>
         </nav>
 
-        {/* CTA Button */}
-        <Link to="/register" className="hidden md:block">
-          <button className="h-[32px] px-5 bg-[rgba(0,136,169,1)] border-none rounded-[50px] cursor-pointer font-montserrat font-bold text-[azure] text-[13px] hover:bg-[rgba(0,136,169,0.15)] hover:shadow-[0_0_15px_rgba(0,136,169,0.6)] transition-all duration-300">
-            Join Now
-          </button>
-        </Link>
+        {/* CTA Button OR Profile menu */}
+        {currentUser ? (
+          <div
+            className="hidden md:block relative"
+            onMouseEnter={openProfile}
+            onMouseLeave={closeProfileDelayed}
+          >
+            <button className="flex items-center gap-2 bg-transparent border-none cursor-pointer">
+              {currentUser.photoBase64 ? (
+                <img
+                  src={currentUser.photoBase64}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover border border-[rgba(0,200,220,0.5)]"
+                />
+              ) : (
+                <span className="avatar-badge w-8 h-8 rounded-full flex items-center justify-center text-white font-montserrat font-black text-sm">
+                  {(currentUser.username || currentUser.email || "U").charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="font-montserrat font-bold text-[13px] text-[azure]">
+                {currentUser.username || currentUser.email}
+              </span>
+            </button>
+
+            {profileOpen && (
+              <div className="navdrop absolute top-full right-0 mt-3 w-48 rounded-xl overflow-hidden py-2">
+                <Link
+                  to="/profile"
+                  className="navdrop-item flex items-center gap-2 px-4 py-2.5 text-[13px] font-[Verdana] text-[azure]/85 no-underline transition-colors"
+                >
+                  👤 View Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="navdrop-item w-full text-left flex items-center gap-2 px-4 py-2.5 text-[13px] font-[Verdana] text-[azure]/85 bg-transparent border-none cursor-pointer transition-colors"
+                >
+                  🚪 Log Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link to="/register" className="hidden md:block">
+            <button className="h-[32px] px-5 bg-[rgba(0,136,169,1)] border-none rounded-[50px] cursor-pointer font-montserrat font-bold text-[azure] text-[13px] hover:bg-[rgba(0,136,169,0.15)] hover:shadow-[0_0_15px_rgba(0,136,169,0.6)] transition-all duration-300">
+              Join Now
+            </button>
+          </Link>
+        )}
 
         {/* Hamburger (Mobile) */}
         <button
@@ -185,22 +231,13 @@ export default function Navbar() {
               </li>
             ))}
 
-            {/* AI Tools (mobile collapsible) */}
             <li>
               <button
                 onClick={() => setMobileToolsOpen((o) => !o)}
                 className="w-full flex items-center justify-between font-montserrat font-bold text-[13.5px] text-[azure] hover:text-[rgba(0,136,169,1)] transition-colors bg-transparent border-none cursor-pointer py-1"
               >
                 AI Tools
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  className={`transition-transform duration-200 ${mobileToolsOpen ? "rotate-180" : ""}`}
-                >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform duration-200 ${mobileToolsOpen ? "rotate-180" : ""}`}>
                   <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
@@ -208,10 +245,7 @@ export default function Navbar() {
                 <ul className="flex flex-col gap-2 mt-2 pl-4 list-none">
                   {AI_TOOLS.map((tool) => (
                     <li key={tool.to}>
-                      <Link
-                        to={tool.to}
-                        className="flex items-center gap-2 text-[13px] font-[Verdana] text-[azure]/75 hover:text-[rgba(0,136,169,1)] no-underline py-1"
-                      >
+                      <Link to={tool.to} className="flex items-center gap-2 text-[13px] font-[Verdana] text-[azure]/75 hover:text-[rgba(0,136,169,1)] no-underline py-1">
                         <span>{tool.icon}</span>
                         {tool.label}
                       </Link>
@@ -221,13 +255,34 @@ export default function Navbar() {
               )}
             </li>
 
-            <li>
-              <Link to="/register">
-                <button className="w-full h-[32px] bg-[rgba(0,136,169,1)] border-none rounded-[50px] cursor-pointer font-montserrat font-bold text-[azure] text-[13px]">
-                  Join Now
-                </button>
-              </Link>
-            </li>
+            {currentUser ? (
+              <>
+                <li>
+                  <Link
+                    to="/profile"
+                    className="font-montserrat font-bold text-[13.5px] text-[azure] hover:text-[rgba(0,136,169,1)] transition-colors no-underline block py-1"
+                  >
+                    👤 View Profile
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full h-[32px] bg-white/10 border border-[rgba(0,136,169,0.5)] rounded-[50px] cursor-pointer font-montserrat font-bold text-[azure] text-[13px]"
+                  >
+                    Log Out ({currentUser.username || currentUser.email})
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link to="/register">
+                  <button className="w-full h-[32px] bg-[rgba(0,136,169,1)] border-none rounded-[50px] cursor-pointer font-montserrat font-bold text-[azure] text-[13px]">
+                    Join Now
+                  </button>
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

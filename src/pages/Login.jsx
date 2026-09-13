@@ -2,7 +2,10 @@
 import { useNavigate, Link } from "react-router-dom";
 import FormInput from "../components/FormInput";
 import { useForm, usePageTitle } from "../hooks";
-import { validators, auth, toast, analytics } from "../utils";
+import { validators, toast, analytics } from "../utils";
+import { auth, db } from "../firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 const validate = (values) => {
   const errors = {};
@@ -22,18 +25,46 @@ export default function Login() {
     validate
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!runValidate()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      auth.login({ username: values.username, email: values.email });
+
+    try {
+      // Firebase signs in by email — if the user typed a username instead,
+      // look up which email it belongs to first.
+      let emailToUse = values.email;
+
+      if (!emailToUse) {
+        const usernameKey = values.username.trim().toLowerCase();
+        const usernameDoc = await getDoc(doc(db, "usernames", usernameKey));
+
+        if (!usernameDoc.exists()) {
+          toast.error("No account found with that username.");
+          setIsSubmitting(false);
+          return;
+        }
+        emailToUse = usernameDoc.data().email;
+      }
+
+      await signInWithEmailAndPassword(auth, emailToUse, values.password);
+
       analytics.track("user_logged_in", { username: values.username });
-      toast.success(`Welcome back, ${values.username}! 💪`);
+      toast.success(`Welcome back, ${values.username || "there"}! 💪`);
       navigate("/");
+    } catch (err) {
+      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+        toast.error("Incorrect password. Please try again.");
+      } else if (err.code === "auth/user-not-found") {
+        toast.error("No account found with that email.");
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+      console.error(err);
+    } finally {
       setIsSubmitting(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -98,7 +129,6 @@ export default function Login() {
               required
             />
 
-            {/* OTP Toggle */}
             <label className="flex items-center gap-3 cursor-pointer mb-5">
               <input
                 type="checkbox"

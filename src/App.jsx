@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PageLoader from "./components/PageLoader";
 import { ScrollProgressBar, ScrollToTopButton } from "./components/ScrollProgress";
+import { AuthProvider } from "./context/AuthContext";
 
 const Home          = lazy(() => import("./pages/Home"));
 const Female        = lazy(() => import("./pages/Female"));
@@ -15,6 +16,7 @@ const BodyAnalysis  = lazy(() => import("./pages/BodyAnalysis"));
 const Register      = lazy(() => import("./pages/Register"));
 const Login         = lazy(() => import("./pages/Login"));
 const Payment       = lazy(() => import("./pages/Payment"));
+const Profile       = lazy(() => import("./pages/Profile"));
 const NotFound      = lazy(() => import("./pages/NotFound"));
 
 import { initRevealObserver } from "./utils";
@@ -41,25 +43,28 @@ function Layout({ children, showFooter = true }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <RouteChangeHandler />
-      <ScrollProgressBar />
-      <ScrollToTopButton />
+    <AuthProvider>
+      <BrowserRouter>
+        <RouteChangeHandler />
+        <ScrollProgressBar />
+        <ScrollToTopButton />
 
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Layout><Home /></Layout>} />
-          <Route path="/female" element={<Layout><Female /></Layout>} />
-          <Route path="/about" element={<Layout><About /></Layout>} />
-          <Route path="/face-analysis" element={<Layout><FaceAnalysis /></Layout>} />
-          <Route path="/voice-analysis" element={<Layout><VoiceAnalysis /></Layout>} />
-          <Route path="/body-analysis" element={<Layout><BodyAnalysis /></Layout>} />
-          <Route path="/register" element={<Layout showFooter={false}><Register /></Layout>} />
-          <Route path="/login" element={<Layout showFooter={false}><Login /></Layout>} />
-          <Route path="/payment" element={<Layout showFooter={false}><Payment /></Layout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Layout><Home /></Layout>} />
+            <Route path="/female" element={<Layout><Female /></Layout>} />
+            <Route path="/about" element={<Layout><About /></Layout>} />
+            <Route path="/face-analysis" element={<Layout><FaceAnalysis /></Layout>} />
+            <Route path="/voice-analysis" element={<Layout><VoiceAnalysis /></Layout>} />
+            <Route path="/body-analysis" element={<Layout><BodyAnalysis /></Layout>} />
+            <Route path="/register" element={<Layout showFooter={false}><Register /></Layout>} />
+            <Route path="/login" element={<Layout showFooter={false}><Login /></Layout>} />
+            <Route path="/payment" element={<Layout showFooter={false}><Payment /></Layout>} />
+            <Route path="/profile" element={<Layout showFooter={false}><Profile /></Layout>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
