@@ -4,7 +4,7 @@ node_modules/
 .pnp.js
 
 # Production build
-/build
+/buildgit status
 
 # Environment variables
 .env
@@ -12,6 +12,7 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.loca
 
 # Logs
 npm-debug.log*

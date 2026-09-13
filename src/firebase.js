@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD1OoyJoGjOnfhiF54_bA9wpC35JEOwmWg",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "looksmaxer-cd7f6.firebaseapp.com",
   projectId: "looksmaxer-cd7f6",
   storageBucket: "looksmaxer-cd7f6.firebasestorage.app",
